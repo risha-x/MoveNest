@@ -1,0 +1,66 @@
+CREATE TABLE IF NOT EXISTS users (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL DEFAULT '',
+  email TEXT NOT NULL DEFAULT '',
+  onboarding_completed INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS moves (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL DEFAULT '',
+  move_date TEXT NOT NULL DEFAULT '',
+  origin TEXT NOT NULL DEFAULT '',
+  destination TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS rooms (
+  id TEXT PRIMARY KEY,
+  move_id TEXT NOT NULL REFERENCES moves(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  type TEXT NOT NULL,
+  display_name TEXT NOT NULL,
+  icon TEXT NOT NULL,
+  color TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS boxes (
+  id TEXT PRIMARY KEY,
+  room_id TEXT NOT NULL REFERENCES rooms(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  packed INTEGER NOT NULL DEFAULT 0,
+  fragile INTEGER NOT NULL DEFAULT 0,
+  notes TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS items (
+  id TEXT PRIMARY KEY,
+  box_id TEXT NOT NULL REFERENCES boxes(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  packed INTEGER NOT NULL DEFAULT 0,
+  fragile INTEGER NOT NULL DEFAULT 0,
+  essential INTEGER NOT NULL DEFAULT 0,
+  notes TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS photos (
+  id TEXT PRIMARY KEY,
+  box_id TEXT REFERENCES boxes(id) ON DELETE CASCADE,
+  item_id TEXT REFERENCES items(id) ON DELETE CASCADE,
+  data_url TEXT NOT NULL,
+  caption TEXT NOT NULL DEFAULT '',
+  note TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL,
+  CHECK ((box_id IS NULL) != (item_id IS NULL))
+);
+
+CREATE INDEX IF NOT EXISTS idx_moves_user ON moves(user_id);
+CREATE INDEX IF NOT EXISTS idx_rooms_move ON rooms(move_id);
+CREATE INDEX IF NOT EXISTS idx_boxes_room ON boxes(room_id);
+CREATE INDEX IF NOT EXISTS idx_items_box ON items(box_id);
+CREATE INDEX IF NOT EXISTS idx_photos_box ON photos(box_id);
+CREATE INDEX IF NOT EXISTS idx_photos_item ON photos(item_id);
