@@ -9,6 +9,7 @@ export type ItemDto = {
   boxId: string;
   roomId: string;
   packed: boolean;
+  unpacked: boolean;
   fragile: boolean;
   essential: boolean;
   notes: string;
@@ -21,6 +22,7 @@ function toDto(row: ItemRowWithRoom): ItemDto {
     boxId: row.box_id,
     roomId: row.room_id,
     packed: Boolean(row.packed),
+    unpacked: Boolean(row.unpacked),
     fragile: Boolean(row.fragile),
     essential: Boolean(row.essential),
     notes: row.notes,
@@ -37,6 +39,7 @@ export const itemService = {
       box_id: fields.boxId,
       name: fields.name.trim(),
       packed: 0,
+      unpacked: 0,
       fragile: fields.fragile ? 1 : 0,
       essential: fields.essential ? 1 : 0,
       notes: fields.notes?.trim() ?? "",
@@ -59,7 +62,7 @@ export const itemService = {
   },
   update(
     id: string,
-    fields: { name?: string; boxId?: string; packed?: boolean; fragile?: boolean; essential?: boolean; notes?: string },
+    fields: { name?: string; boxId?: string; packed?: boolean; unpacked?: boolean; fragile?: boolean; essential?: boolean; notes?: string },
     userId: string,
   ): ItemDto {
     const existing = itemModel.get(id);
@@ -76,6 +79,7 @@ export const itemService = {
       name: fields.name?.trim() ?? existing.name,
       box_id: fields.boxId ?? existing.box_id,
       packed: fields.packed !== undefined ? (fields.packed ? 1 : 0) : existing.packed,
+      unpacked: fields.unpacked !== undefined ? (fields.unpacked ? 1 : 0) : existing.unpacked,
       fragile: fields.fragile !== undefined ? (fields.fragile ? 1 : 0) : existing.fragile,
       essential: fields.essential !== undefined ? (fields.essential ? 1 : 0) : existing.essential,
       notes: fields.notes ?? existing.notes,
@@ -92,5 +96,9 @@ export const itemService = {
   bulkSetPackedForRoom(roomId: string, packed: boolean, userId: string) {
     assertOwner(ownerUserIdForRoom(roomId), userId, "Room not found.");
     itemModel.setPackedForRoom(roomId, packed);
+  },
+  bulkSetUnpackedForRoom(roomId: string, unpacked: boolean, userId: string) {
+    assertOwner(ownerUserIdForRoom(roomId), userId, "Room not found.");
+    itemModel.setUnpackedForRoom(roomId, unpacked);
   },
 };

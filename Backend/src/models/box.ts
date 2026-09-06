@@ -5,14 +5,16 @@ export type BoxRow = {
   room_id: string;
   name: string;
   packed: number;
+  unpacked: number;
   fragile: number;
+  essential: number;
   notes: string;
   created_at: string;
 };
 
 const insertStmt = db.prepare(`
-  INSERT INTO boxes (id, room_id, name, packed, fragile, notes, created_at)
-  VALUES (@id, @room_id, @name, @packed, @fragile, @notes, @created_at)
+  INSERT INTO boxes (id, room_id, name, packed, unpacked, fragile, essential, notes, created_at)
+  VALUES (@id, @room_id, @name, @packed, @unpacked, @fragile, @essential, @notes, @created_at)
 `);
 const listByRoomStmt = db.prepare(`SELECT * FROM boxes WHERE room_id = ? ORDER BY created_at`);
 const listByMoveStmt = db.prepare(`
@@ -23,7 +25,8 @@ const listByMoveStmt = db.prepare(`
 `);
 const getStmt = db.prepare(`SELECT * FROM boxes WHERE id = ?`);
 const updateStmt = db.prepare(`
-  UPDATE boxes SET name = @name, room_id = @room_id, packed = @packed, fragile = @fragile, notes = @notes
+  UPDATE boxes SET name = @name, room_id = @room_id, packed = @packed, unpacked = @unpacked,
+    fragile = @fragile, essential = @essential, notes = @notes
   WHERE id = @id
 `);
 const deleteStmt = db.prepare(`DELETE FROM boxes WHERE id = ?`);
@@ -72,7 +75,7 @@ export const boxModel = {
   get(id: string): BoxRow | undefined {
     return getStmt.get(id) as BoxRow | undefined;
   },
-  update(row: { id: string; name: string; room_id: string; packed: number; fragile: number; notes: string }) {
+  update(row: { id: string; name: string; room_id: string; packed: number; unpacked: number; fragile: number; essential: number; notes: string }) {
     updateStmt.run(row);
   },
   delete(id: string) {

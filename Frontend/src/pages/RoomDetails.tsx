@@ -13,6 +13,7 @@ export function RoomDetails() {
     renameRoom,
     deleteRoom,
     toggleRoomItemsPacked,
+    toggleRoomItemsUnpacked,
     setSelectedRoomId,
     setEditingBoxId,
     setShowAddBox,
@@ -24,6 +25,7 @@ export function RoomDetails() {
     setConditionPhotoItemId,
     openItemEdit,
     toggleItemPacked,
+    toggleItemUnpacked,
   } = useApp();
 
   if (!selectedRoom) return null;
@@ -67,6 +69,12 @@ export function RoomDetails() {
             : 0}
           % packed
         </strong>
+        <strong>
+          {roomItems.filter((item) => item.unpacked).length
+            ? Math.round((roomItems.filter((item) => item.unpacked).length / Math.max(1, roomItems.length)) * 100)
+            : 0}
+          % unpacked
+        </strong>
       </div>
       <div className="view-toolbar">
         <div className="section-heading compact">
@@ -82,6 +90,14 @@ export function RoomDetails() {
               onClick={() => toggleRoomItemsPacked(selectedRoom.id, !allRoomItemsPacked)}
             >
               <Check size={16} /> {allRoomItemsPacked ? "Mark all unpacked" : "Mark all packed"}
+            </button>
+          )}
+          {roomItems.length > 0 && (
+            <button
+              className="soft-button ghost-button"
+              onClick={() => toggleRoomItemsUnpacked(selectedRoom.id, !roomItems.every((item) => item.unpacked))}
+            >
+              <Check size={16} /> {roomItems.every((item) => item.unpacked) ? "Mark all not unpacked" : "Mark all unpacked"}
             </button>
           )}
           <button
@@ -141,6 +157,7 @@ export function RoomDetails() {
             onPhotos={() => setConditionPhotoItemId(item.id)}
             onEdit={() => openItemEdit(item)}
             onTogglePacked={() => toggleItemPacked(item.id)}
+            onToggleUnpacked={() => toggleItemUnpacked(item.id)}
           />
         ))}
       </div>

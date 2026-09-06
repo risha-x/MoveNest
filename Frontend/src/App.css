@@ -240,3 +240,4 @@
 .photo-modal-date { margin:0 0 4px; text-align:left; }
 .photo-modal label, .photo-modal input, .photo-modal textarea { text-align:left; }
 .modal textarea { min-height:72px; resize:vertical; font-family:inherit; }.label-optional { font-weight:400; color:#9db0b0; }
+.back-link-row { flex-direction:column; align-items:flex-start; gap:10px; }

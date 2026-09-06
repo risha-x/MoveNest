@@ -21,6 +21,7 @@ export function Search() {
     setConditionPhotoItemId,
     openItemEdit,
     toggleItemPacked,
+    toggleItemUnpacked,
   } = useApp();
 
   const searchResults = search
@@ -32,7 +33,7 @@ export function Search() {
             ? item.essential
             : searchFilter === "fragile"
               ? item.fragile
-              : !item.packed,
+              : !item.unpacked,
       );
 
   return (
@@ -77,6 +78,7 @@ export function Search() {
               onPhotos={() => setConditionPhotoItemId(item.id)}
               onEdit={() => openItemEdit(item)}
               onTogglePacked={() => toggleItemPacked(item.id)}
+              onToggleUnpacked={() => toggleItemUnpacked(item.id)}
             />
           );
         })}

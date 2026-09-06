@@ -8,6 +8,7 @@ export function BoxCard({
   photoCount,
   onOpen,
   onTogglePacked,
+  onToggleUnpacked,
   onEdit,
 }: {
   box: MoveBox;
@@ -15,6 +16,7 @@ export function BoxCard({
   photoCount: number;
   onOpen: () => void;
   onTogglePacked: () => void;
+  onToggleUnpacked: () => void;
   onEdit: () => void;
 }) {
   return (
@@ -44,6 +46,25 @@ export function BoxCard({
             {box.packed ? "Packed" : "In progress"}
           </span>
           <span
+            className={`mini-status ${box.unpacked ? "ready" : ""}`}
+            role="button"
+            tabIndex={0}
+            aria-label={box.unpacked ? `Mark ${box.name} as not unpacked` : `Mark ${box.name} as unpacked`}
+            onClick={(event) => {
+              event.stopPropagation();
+              onToggleUnpacked();
+            }}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                event.stopPropagation();
+                onToggleUnpacked();
+              }
+            }}
+          >
+            {box.unpacked ? "Unpacked" : "To unpack"}
+          </span>
+          <span
             className="icon-chip"
             role="button"
             tabIndex={0}
@@ -68,6 +89,7 @@ export function BoxCard({
       <p>
         <RoomIcon room={room} size={14} /> {room.name} ·{" "}
         {box.itemCount} items
+        {box.essential && <span className="essential-star">Essential</span>}
         {photoCount > 0 && (
           <span className="photo-count-badge"><Camera size={11} /> {photoCount}</span>
         )}

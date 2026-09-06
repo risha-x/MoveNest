@@ -16,6 +16,7 @@ export function Boxes() {
     roomFor,
     openBox,
     toggleBoxPacked,
+    toggleBoxUnpacked,
     openBoxEdit,
     boxPhotoCounts,
     setActive,
@@ -80,6 +81,7 @@ export function Boxes() {
               photoCount={boxPhotoCounts[box.id] || 0}
               onOpen={() => openBox(box.id)}
               onTogglePacked={() => toggleBoxPacked(box.id)}
+              onToggleUnpacked={() => toggleBoxUnpacked(box.id)}
               onEdit={() => openBoxEdit(box)}
             />
           );

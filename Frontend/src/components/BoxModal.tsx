@@ -56,6 +56,9 @@ export function BoxModal({
           <label>
             <input type="checkbox" name="fragile" defaultChecked={editingBox?.fragile} /> Fragile box
           </label>
+          <label>
+            <input type="checkbox" name="essential" defaultChecked={editingBox?.essential} /> Essential box
+          </label>
         </div>
         <label>
           Notes <span className="label-optional">(optional)</span>

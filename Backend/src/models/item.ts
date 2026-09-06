@@ -5,6 +5,7 @@ export type ItemRow = {
   box_id: string;
   name: string;
   packed: number;
+  unpacked: number;
   fragile: number;
   essential: number;
   notes: string;
@@ -14,8 +15,8 @@ export type ItemRow = {
 export type ItemRowWithRoom = ItemRow & { room_id: string };
 
 const insertStmt = db.prepare(`
-  INSERT INTO items (id, box_id, name, packed, fragile, essential, notes, created_at)
-  VALUES (@id, @box_id, @name, @packed, @fragile, @essential, @notes, @created_at)
+  INSERT INTO items (id, box_id, name, packed, unpacked, fragile, essential, notes, created_at)
+  VALUES (@id, @box_id, @name, @packed, @unpacked, @fragile, @essential, @notes, @created_at)
 `);
 const listByBoxStmt = db.prepare(`
   SELECT items.*, boxes.room_id as room_id FROM items
@@ -41,7 +42,7 @@ const getStmt = db.prepare(`
   WHERE items.id = ?
 `);
 const updateStmt = db.prepare(`
-  UPDATE items SET name = @name, box_id = @box_id, packed = @packed, fragile = @fragile,
+  UPDATE items SET name = @name, box_id = @box_id, packed = @packed, unpacked = @unpacked, fragile = @fragile,
     essential = @essential, notes = @notes
   WHERE id = @id
 `);
@@ -49,6 +50,11 @@ const deleteStmt = db.prepare(`DELETE FROM items WHERE id = ?`);
 const setPackedForBoxStmt = db.prepare(`UPDATE items SET packed = ? WHERE box_id = ?`);
 const setPackedForRoomStmt = db.prepare(`
   UPDATE items SET packed = ?
+  WHERE box_id IN (SELECT id FROM boxes WHERE room_id = ?)
+`);
+const setUnpackedForBoxStmt = db.prepare(`UPDATE items SET unpacked = ? WHERE box_id = ?`);
+const setUnpackedForRoomStmt = db.prepare(`
+  UPDATE items SET unpacked = ?
   WHERE box_id IN (SELECT id FROM boxes WHERE room_id = ?)
 `);
 
@@ -68,7 +74,7 @@ export const itemModel = {
   get(id: string): ItemRowWithRoom | undefined {
     return getStmt.get(id) as ItemRowWithRoom | undefined;
   },
-  update(row: { id: string; name: string; box_id: string; packed: number; fragile: number; essential: number; notes: string }) {
+  update(row: { id: string; name: string; box_id: string; packed: number; unpacked: number; fragile: number; essential: number; notes: string }) {
     updateStmt.run(row);
   },
   delete(id: string) {
@@ -79,5 +85,11 @@ export const itemModel = {
   },
   setPackedForRoom(roomId: string, packed: boolean) {
     setPackedForRoomStmt.run(packed ? 1 : 0, roomId);
+  },
+  setUnpackedForBox(boxId: string, unpacked: boolean) {
+    setUnpackedForBoxStmt.run(unpacked ? 1 : 0, boxId);
+  },
+  setUnpackedForRoom(roomId: string, unpacked: boolean) {
+    setUnpackedForRoomStmt.run(unpacked ? 1 : 0, roomId);
   },
 };

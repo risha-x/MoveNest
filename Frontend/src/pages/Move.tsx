@@ -2,7 +2,7 @@ import { ArrowLeft, Clock3, Sparkles } from "lucide-react";
 import { useApp } from "../context/AppContext";
 
 export function Move() {
-  const { moveName, setActive, openSearchFilter, progress, packed, totalItems, visibleTasks } = useApp();
+  const { moveName, setActive, openSearchFilter, progress, packed, unpackProgress, unpacked, totalItems, visibleTasks } = useApp();
 
   return (
     <section className="view-section">
@@ -29,6 +29,19 @@ export function Move() {
           </p>
           <div className="progress-track">
             <div style={{ width: `${progress}%` }} />
+          </div>
+        </div>
+        <div className="big-progress-panel">
+          <span className="section-kicker">UNPACKING</span>
+          <div className="circle-progress unpack-progress">
+            <strong>{unpackProgress}%</strong>
+            <span>unpacked</span>
+          </div>
+          <p>
+            <strong>{unpacked} of {totalItems} items</strong> have found their place.
+          </p>
+          <div className="progress-track">
+            <div style={{ width: `${unpackProgress}%` }} />
           </div>
         </div>
         <div className="timeline-panel">

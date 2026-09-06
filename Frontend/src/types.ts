@@ -13,6 +13,7 @@ export type Item = {
   fragile?: boolean;
   essential?: boolean;
   packed: boolean;
+  unpacked: boolean;
   notes?: string;
 };
 export type MoveBox = {
@@ -20,7 +21,9 @@ export type MoveBox = {
   name: string;
   roomId: string;
   packed: boolean;
+  unpacked: boolean;
   fragile: boolean;
+  essential: boolean;
   itemCount: number;
   items: string[];
   notes?: string;

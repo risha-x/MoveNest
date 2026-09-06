@@ -69,10 +69,10 @@ export const api = {
   getBoxesByMove(moveId: string) {
     return request<MoveBox[]>(`/boxes?moveId=${moveId}`);
   },
-  createBox(data: { roomId: string; name: string; fragile?: boolean; notes?: string }) {
+  createBox(data: { roomId: string; name: string; fragile?: boolean; essential?: boolean; notes?: string }) {
     return request<MoveBox>("/boxes", { method: "POST", body: JSON.stringify(data) });
   },
-  updateBox(id: string, fields: { name?: string; roomId?: string; packed?: boolean; fragile?: boolean; notes?: string }) {
+  updateBox(id: string, fields: { name?: string; roomId?: string; packed?: boolean; unpacked?: boolean; fragile?: boolean; essential?: boolean; notes?: string }) {
     return request<MoveBox>(`/boxes/${id}`, { method: "PUT", body: JSON.stringify(fields) });
   },
   deleteBox(id: string) {
@@ -88,7 +88,7 @@ export const api = {
   },
   updateItem(
     id: string,
-    fields: { name?: string; boxId?: string; packed?: boolean; fragile?: boolean; essential?: boolean; notes?: string },
+    fields: { name?: string; boxId?: string; packed?: boolean; unpacked?: boolean; fragile?: boolean; essential?: boolean; notes?: string },
   ) {
     return request<Item>(`/items/${id}`, { method: "PUT", body: JSON.stringify(fields) });
   },
@@ -97,6 +97,9 @@ export const api = {
   },
   setRoomItemsPacked(roomId: string, packed: boolean) {
     return request<void>(`/items/pack-all/${roomId}`, { method: "PUT", body: JSON.stringify({ packed }) });
+  },
+  setRoomItemsUnpacked(roomId: string, unpacked: boolean) {
+    return request<void>(`/items/unpack-all/${roomId}`, { method: "PUT", body: JSON.stringify({ unpacked }) });
   },
 
   // --- photos ---

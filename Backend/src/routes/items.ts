@@ -9,5 +9,6 @@ itemsRouter.use(currentUser);
 itemsRouter.get("/", itemController.list);
 itemsRouter.post("/", itemController.create);
 itemsRouter.put("/pack-all/:roomId", itemController.bulkSetPackedForRoom);
+itemsRouter.put("/unpack-all/:roomId", itemController.bulkSetUnpackedForRoom);
 itemsRouter.put("/:id", itemController.update);
 itemsRouter.delete("/:id", itemController.remove);

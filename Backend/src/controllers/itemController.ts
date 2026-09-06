@@ -23,4 +23,8 @@ export const itemController = {
     itemService.bulkSetPackedForRoom(String(req.params.roomId), Boolean(req.body.packed), req.userId);
     res.status(204).end();
   },
+  bulkSetUnpackedForRoom(req: Request, res: Response) {
+    itemService.bulkSetUnpackedForRoom(String(req.params.roomId), Boolean(req.body.unpacked), req.userId);
+    res.status(204).end();
+  },
 };

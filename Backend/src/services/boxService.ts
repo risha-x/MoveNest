@@ -10,7 +10,9 @@ export type BoxDto = {
   roomId: string;
   name: string;
   packed: boolean;
+  unpacked: boolean;
   fragile: boolean;
+  essential: boolean;
   notes: string;
   itemCount: number;
   items: string[];
@@ -22,7 +24,9 @@ function toDto(row: BoxRow): BoxDto {
     roomId: row.room_id,
     name: row.name,
     packed: Boolean(row.packed),
+    unpacked: Boolean(row.unpacked),
     fragile: Boolean(row.fragile),
+    essential: Boolean(row.essential),
     notes: row.notes,
     itemCount: boxModel.itemCount(row.id),
     items: boxModel.itemNames(row.id),
@@ -39,7 +43,9 @@ function toDtoList(rows: BoxRow[]): BoxDto[] {
     roomId: row.room_id,
     name: row.name,
     packed: Boolean(row.packed),
+    unpacked: Boolean(row.unpacked),
     fragile: Boolean(row.fragile),
+    essential: Boolean(row.essential),
     notes: row.notes,
     itemCount: counts[row.id] ?? 0,
     items: names[row.id] ?? [],
@@ -52,9 +58,13 @@ const sealBox = db.transaction((id: string, updated: Parameters<typeof boxModel.
   boxModel.update(updated);
   itemModel.setPackedForBox(id, true);
 });
+const unpackBox = db.transaction((id: string, updated: Parameters<typeof boxModel.update>[0]) => {
+  boxModel.update(updated);
+  itemModel.setUnpackedForBox(id, true);
+});
 
 export const boxService = {
-  create(roomId: string, fields: { name: string; fragile?: boolean; notes?: string }, userId: string): BoxDto {
+  create(roomId: string, fields: { name: string; fragile?: boolean; essential?: boolean; notes?: string }, userId: string): BoxDto {
     if (!roomId) throw new ApiError(400, "roomId is required.");
     if (!fields.name?.trim()) throw new ApiError(400, "Box name is required.");
     assertOwner(ownerUserIdForRoom(roomId), userId, "Room not found.");
@@ -63,7 +73,9 @@ export const boxService = {
       room_id: roomId,
       name: fields.name.trim(),
       packed: 0,
+      unpacked: 0,
       fragile: fields.fragile ? 1 : 0,
+      essential: fields.essential ? 1 : 0,
       notes: fields.notes?.trim() ?? "",
       created_at: nowIso(),
     };
@@ -80,7 +92,7 @@ export const boxService = {
   },
   update(
     id: string,
-    fields: { name?: string; roomId?: string; packed?: boolean; fragile?: boolean; notes?: string },
+    fields: { name?: string; roomId?: string; packed?: boolean; unpacked?: boolean; fragile?: boolean; essential?: boolean; notes?: string },
     userId: string,
   ): BoxDto {
     const existing = boxModel.get(id);
@@ -97,11 +109,15 @@ export const boxService = {
       name: fields.name?.trim() ?? existing.name,
       room_id: fields.roomId ?? existing.room_id,
       packed: fields.packed !== undefined ? (fields.packed ? 1 : 0) : existing.packed,
+      unpacked: fields.unpacked !== undefined ? (fields.unpacked ? 1 : 0) : existing.unpacked,
       fragile: fields.fragile !== undefined ? (fields.fragile ? 1 : 0) : existing.fragile,
+      essential: fields.essential !== undefined ? (fields.essential ? 1 : 0) : existing.essential,
       notes: fields.notes ?? existing.notes,
     };
     if (fields.packed === true && !existing.packed) {
       sealBox(id, updated);
+    } else if (fields.unpacked === true && !existing.unpacked) {
+      unpackBox(id, updated);
     } else {
       boxModel.update(updated);
     }

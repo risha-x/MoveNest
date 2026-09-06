@@ -47,8 +47,10 @@ type AppContextValue = {
   boxPhotoCounts: Record<string, number>;
   filteredItems: Item[];
   packed: number;
+  unpacked: number;
   totalItems: number;
   progress: number;
+  unpackProgress: number;
   userRooms: UserRoom[];
   roomFor: (id: string) => Room | UserRoom;
   moveName: string;
@@ -71,8 +73,11 @@ type AppContextValue = {
   openItemEdit: (item: Item) => void;
   openBoxEdit: (box: MoveBox) => void;
   toggleItemPacked: (id: string) => void;
+  toggleItemUnpacked: (id: string) => void;
   toggleBoxPacked: (id: string) => void;
+  toggleBoxUnpacked: (id: string) => void;
   toggleRoomItemsPacked: (roomId: string, packed: boolean) => void;
+  toggleRoomItemsUnpacked: (roomId: string, unpacked: boolean) => void;
   selectedRoom: UserRoom | undefined;
   viewedBox: MoveBox | undefined;
   editingItem: Item | null;
@@ -191,8 +196,10 @@ export function AppProvider({
   );
 
   const packed = items.filter((item) => item.packed).length;
+  const unpacked = items.filter((item) => item.unpacked).length;
   const totalItems = items.length;
   const progress = totalItems ? Math.round((packed / totalItems) * 100) : 0;
+  const unpackProgress = totalItems ? Math.round((unpacked / totalItems) * 100) : 0;
   const roomFor = (id: string) => userRooms.find((room) => room.id === id) || userRooms[0] || rooms[0];
   const moveName = user.move?.name || "My move";
   const moveDate = user.move?.date
@@ -237,6 +244,7 @@ export function AppProvider({
         roomId: String(data.get("room")),
         name: String(data.get("name")),
         fragile: data.get("fragile") === "on",
+        essential: data.get("essential") === "on",
         notes: String(data.get("notes") ?? "").trim(),
       });
       await refreshInventory();
@@ -286,6 +294,7 @@ export function AppProvider({
         name: String(data.get("name")),
         roomId: String(data.get("room")),
         fragile: data.get("fragile") === "on",
+        essential: data.get("essential") === "on",
         notes: String(data.get("notes") ?? "").trim(),
       });
       await refreshInventory();
@@ -398,6 +407,22 @@ export function AppProvider({
       reportError(err, "Couldn't update that item. Please try again.");
     }
   };
+  const toggleItemUnpacked = async (id: string) => {
+    const item = items.find((entry) => entry.id === id);
+    if (!item) return;
+    const nextUnpacked = !item.unpacked;
+    setItems((current) =>
+      current.map((entry) => (entry.id === id ? { ...entry, unpacked: nextUnpacked } : entry)),
+    );
+    try {
+      await api.updateItem(id, { unpacked: nextUnpacked });
+    } catch (err) {
+      setItems((current) =>
+        current.map((entry) => (entry.id === id ? { ...entry, unpacked: item.unpacked } : entry)),
+      );
+      reportError(err, "Couldn't update that item. Please try again.");
+    }
+  };
   const toggleBoxPacked = async (id: string) => {
     const box = boxes.find((entry) => entry.id === id);
     if (!box) return;
@@ -416,6 +441,23 @@ export function AppProvider({
       reportError(err, "Couldn't update that box. Please try again.");
     }
   };
+  const toggleBoxUnpacked = async (id: string) => {
+    const box = boxes.find((entry) => entry.id === id);
+    if (!box) return;
+    const nextUnpacked = !box.unpacked;
+    setBoxes((current) =>
+      current.map((entry) => (entry.id === id ? { ...entry, unpacked: nextUnpacked } : entry)),
+    );
+    try {
+      await api.updateBox(id, { unpacked: nextUnpacked });
+      if (nextUnpacked) await refreshInventory();
+    } catch (err) {
+      setBoxes((current) =>
+        current.map((entry) => (entry.id === id ? { ...entry, unpacked: box.unpacked } : entry)),
+      );
+      reportError(err, "Couldn't update that box. Please try again.");
+    }
+  };
   const toggleRoomItemsPacked = async (roomId: string, packedValue: boolean) => {
     const previousById = new Map(
       items.filter((entry) => entry.roomId === roomId).map((entry) => [entry.id, entry.packed] as const),
@@ -429,6 +471,24 @@ export function AppProvider({
       setItems((current) =>
         current.map((entry) =>
           previousById.has(entry.id) ? { ...entry, packed: previousById.get(entry.id)! } : entry,
+        ),
+      );
+      reportError(err, "Couldn't update those items. Please try again.");
+    }
+  };
+  const toggleRoomItemsUnpacked = async (roomId: string, unpackedValue: boolean) => {
+    const previousById = new Map(
+      items.filter((entry) => entry.roomId === roomId).map((entry) => [entry.id, entry.unpacked] as const),
+    );
+    setItems((current) =>
+      current.map((entry) => (entry.roomId === roomId ? { ...entry, unpacked: unpackedValue } : entry)),
+    );
+    try {
+      await api.setRoomItemsUnpacked(roomId, unpackedValue);
+    } catch (err) {
+      setItems((current) =>
+        current.map((entry) =>
+          previousById.has(entry.id) ? { ...entry, unpacked: previousById.get(entry.id)! } : entry,
         ),
       );
       reportError(err, "Couldn't update those items. Please try again.");
@@ -554,8 +614,10 @@ export function AppProvider({
     boxPhotoCounts,
     filteredItems,
     packed,
+    unpacked,
     totalItems,
     progress,
+    unpackProgress,
     userRooms,
     roomFor,
     moveName,
@@ -578,8 +640,11 @@ export function AppProvider({
     openItemEdit,
     openBoxEdit,
     toggleItemPacked,
+    toggleItemUnpacked,
     toggleBoxPacked,
+    toggleBoxUnpacked,
     toggleRoomItemsPacked,
+    toggleRoomItemsUnpacked,
     selectedRoom,
     viewedBox,
     editingItem,

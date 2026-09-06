@@ -9,6 +9,7 @@ export function ItemCard({
   onPhotos,
   onEdit,
   onTogglePacked,
+  onToggleUnpacked,
 }: {
   item: Item;
   subtitle?: ReactNode;
@@ -16,6 +17,7 @@ export function ItemCard({
   onPhotos: () => void;
   onEdit: () => void;
   onTogglePacked: () => void;
+  onToggleUnpacked: () => void;
 }) {
   return (
     <div className="result-row">
@@ -65,11 +67,22 @@ export function ItemCard({
         <button
           type="button"
           className={`item-check ${item.packed ? "checked" : ""}`}
+          title={item.packed ? "Mark not packed" : "Mark packed"}
           aria-pressed={item.packed}
           aria-label={item.packed ? `Mark ${item.name} as not packed` : `Mark ${item.name} as packed`}
           onClick={onTogglePacked}
         >
           {item.packed && <Check size={13} />}
+        </button>
+        <button
+          type="button"
+          className={`item-check ${item.unpacked ? "checked" : ""}`}
+          title={item.unpacked ? "Mark not unpacked" : "Mark unpacked"}
+          aria-pressed={item.unpacked}
+          aria-label={item.unpacked ? `Mark ${item.name} as not unpacked` : `Mark ${item.name} as unpacked`}
+          onClick={onToggleUnpacked}
+        >
+          {item.unpacked && <Check size={13} />}
         </button>
       </span>
     </div>

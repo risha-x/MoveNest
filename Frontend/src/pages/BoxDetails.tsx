@@ -12,6 +12,7 @@ export function BoxDetails() {
     setActive,
     openBoxEdit,
     toggleBoxPacked,
+    toggleBoxUnpacked,
     setAddItemBoxContext,
     setSelectedRoomId,
     setEditingItemId,
@@ -19,6 +20,7 @@ export function BoxDetails() {
     setConditionPhotoItemId,
     openItemEdit,
     toggleItemPacked,
+    toggleItemUnpacked,
   } = useApp();
 
   if (!viewedBox) return null;
@@ -52,6 +54,12 @@ export function BoxDetails() {
             onClick={() => openBoxEdit(viewedBox)}
           >
             <Pencil size={15} />
+          </button>
+          <button
+            className={`mini-status pack-toggle ${viewedBox.unpacked ? "ready" : ""}`}
+            onClick={() => toggleBoxUnpacked(viewedBox.id)}
+          >
+            {viewedBox.unpacked ? "Unpacked" : "Mark unpacked"}
           </button>
           <button
             className={`mini-status pack-toggle ${viewedBox.packed ? "ready" : ""}`}
@@ -89,6 +97,7 @@ export function BoxDetails() {
             onPhotos={() => setConditionPhotoItemId(item.id)}
             onEdit={() => openItemEdit(item)}
             onTogglePacked={() => toggleItemPacked(item.id)}
+            onToggleUnpacked={() => toggleItemUnpacked(item.id)}
           />
         ))}
       </div>
