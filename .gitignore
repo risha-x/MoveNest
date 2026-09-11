@@ -15,6 +15,12 @@ dist-ssr
 # SQLite data - rebuilds from Backend/src/db/schema.sql on first boot
 Database/*.db
 
+# Secrets - never commit real values, only .env.example templates
+.env
+.env.*
+!.env.example
+!*/.env.example
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
