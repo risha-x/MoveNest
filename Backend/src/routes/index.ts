@@ -6,6 +6,7 @@ import { boxesRouter } from "./boxes.js";
 import { itemsRouter } from "./items.js";
 import { photosRouter } from "./photos.js";
 import { searchRouter } from "./search.js";
+import { authTestRouter } from "./authTest.js";
 
 export const apiRouter = Router();
 
@@ -16,3 +17,4 @@ apiRouter.use("/boxes", boxesRouter);
 apiRouter.use("/items", itemsRouter);
 apiRouter.use("/photos", photosRouter);
 apiRouter.use("/search", searchRouter);
+apiRouter.use("/auth-test", authTestRouter); // isolated proof route for supabaseAuth middleware - not used by any real resource route
