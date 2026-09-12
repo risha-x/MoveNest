@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import type { MoveDraft, User, AuthView, UserRoom } from "./types";
-import { clearSessionUserId, getSessionUserId, setSessionUserId } from "./storage";
+import { clearSessionUserId, getSessionUserId } from "./storage";
 import { api } from "./services/api";
+import { supabase } from "./lib/supabaseClient";
 import { AppProvider, useApp } from "./context/AppContext";
 import { Onboarding } from "./pages/Onboarding";
 import { Dashboard } from "./pages/Dashboard";
@@ -138,17 +139,17 @@ function App() {
   const [sessionLoading, setSessionLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
 
-  // There's no password/login here — just a locally-remembered id telling the
-  // backend which user this browser is. On load, ask the API who that is.
+  // Prefer a real Supabase session; fall back to the legacy locally-remembered
+  // id (pre-real-auth accounts) if none exists. Either way, ask the API who
+  // that is - api.ts sends whichever credential is available on every call.
   useEffect(() => {
-    const storedId = getSessionUserId();
-    if (!storedId) {
-      // oxlint-disable-next-line react/set-state-in-effect
-      setSessionLoading(false);
-      return;
-    }
     (async () => {
       try {
+        const supabaseSession = supabase ? (await supabase.auth.getSession()).data.session : null;
+        const storedId = supabaseSession ? supabaseSession.user.id : getSessionUserId();
+        if (!storedId) {
+          return;
+        }
         const fetchedUser = await api.getUser(storedId);
         if (fetchedUser.onboardingCompleted) {
           const move = await api.getMove();
@@ -168,27 +169,26 @@ function App() {
     })();
   }, []);
 
-  const beginOnboarding = async () => {
-    try {
-      const user = await api.createUser("");
-      setSessionUserId(user.id);
-      setPendingUser(user);
-      setCurrentUser(user);
-      setAuthView("name");
-    } catch (err) {
-      setAuthError(err instanceof Error ? err.message : "Couldn't get started. Please try again.");
-    }
+  const beginOnboarding = () => {
+    setAuthView("name");
   };
-  const saveName = async (name: string) => {
-    const base = pendingUser || currentUser!;
+  const signUp = async (fields: { name: string; email: string; password: string }) => {
+    if (!supabase) {
+      setAuthError("Sign-up isn't available right now - Supabase isn't configured.");
+      return;
+    }
     try {
-      const updated = await api.updateUser(base.id, { displayName: name });
-      const user = { ...base, ...updated };
+      const { data, error } = await supabase.auth.signUp({ email: fields.email, password: fields.password });
+      if (error) throw error;
+      if (!data.session) throw new Error("Sign-up succeeded but no session was returned. Please try signing in.");
+      const fetchedUser = await api.getUser(data.session.user.id);
+      const updated = await api.updateUser(fetchedUser.id, { displayName: fields.name, email: fields.email });
+      const user = { ...fetchedUser, ...updated };
       setPendingUser(user);
       setCurrentUser(user);
       setAuthView("move");
     } catch (err) {
-      setAuthError(err instanceof Error ? err.message : "Couldn't save your name. Please try again.");
+      setAuthError(err instanceof Error ? err.message : "Couldn't create your account. Please try again.");
     }
   };
   const saveMove = async (move: MoveDraft) => {
@@ -214,6 +214,7 @@ function App() {
     }
   };
   const logout = () => {
+    supabase?.auth.signOut();
     clearSessionUserId();
     setCurrentUser(null);
     setPendingUser(null);
@@ -228,7 +229,7 @@ function App() {
         <Onboarding
           view={authView}
           onBegin={beginOnboarding}
-          onName={saveName}
+          onSignUp={signUp}
           onMove={saveMove}
         />
         {authError && <ErrorToast message={authError} onDismiss={() => setAuthError(null)} />}

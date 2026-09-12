@@ -18,12 +18,12 @@ function AuthFrame({ children }: { children: ReactNode }) {
 export function Onboarding({
   view,
   onBegin,
-  onName,
+  onSignUp,
   onMove,
 }: {
   view: AuthView;
   onBegin: () => void;
-  onName: (name: string) => void;
+  onSignUp: (fields: { name: string; email: string; password: string }) => void;
   onMove: (move: MoveDraft) => void;
 }) {
   const [error, setError] = useState("");
@@ -53,25 +53,43 @@ export function Onboarding({
           className="auth-card"
           onSubmit={(event) => {
             event.preventDefault();
-            const name = String(
-              new FormData(event.currentTarget).get("name"),
-            ).trim();
-            if (name) {
-              onName(name);
-            } else {
+            const data = new FormData(event.currentTarget);
+            const name = String(data.get("name")).trim();
+            const email = String(data.get("email")).trim();
+            const password = String(data.get("password"));
+            if (!name) {
               setError("Tell us what to call you.");
+              return;
             }
+            if (!email) {
+              setError("An email is needed to save your account.");
+              return;
+            }
+            if (password.length < 6) {
+              setError("Password must be at least 6 characters.");
+              return;
+            }
+            setError("");
+            onSignUp({ name, email, password });
           }}
         >
           <span className="auth-icon">
             <Sparkles size={24} />
           </span>
           <p className="eyebrow">NICE TO MEET YOU</p>
-          <h1>What should we call you?</h1>
+          <h1>Create your account</h1>
           <p className="auth-subtitle">Let’s make MoveNest feel like home.</p>
           <label>
             Your name
             <input name="name" autoFocus placeholder="e.g. Alex" />
+          </label>
+          <label>
+            Email
+            <input name="email" type="email" placeholder="you@example.com" />
+          </label>
+          <label>
+            Password
+            <input name="password" type="password" placeholder="At least 6 characters" minLength={6} />
           </label>
           {error && <p className="form-error">{error}</p>}
           <button className="auth-submit">
