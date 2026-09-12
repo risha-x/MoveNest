@@ -15,6 +15,10 @@ export function AuthTest() {
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!supabase) {
+      setLoadingSession(false);
+      return;
+    }
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
       setLoadingSession(false);
@@ -26,22 +30,33 @@ export function AuthTest() {
   }, []);
 
   const handleSignUp = async () => {
+    if (!supabase) return;
     setMessage(null);
     const { error } = await supabase.auth.signUp({ email, password });
     setMessage(error ? `Sign up failed: ${error.message}` : "Signed up. Check your email if confirmation is required, or you may already be signed in below.");
   };
 
   const handleSignIn = async () => {
+    if (!supabase) return;
     setMessage(null);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setMessage(error ? `Sign in failed: ${error.message}` : "Signed in.");
   };
 
   const handleSignOut = async () => {
+    if (!supabase) return;
     setMessage(null);
     await supabase.auth.signOut();
     setMessage("Signed out.");
   };
+
+  if (!supabase) {
+    return (
+      <p style={{ fontFamily: "monospace", padding: 24, color: "crimson" }}>
+        Supabase is not configured (missing VITE_SUPABASE_URL / VITE_SUPABASE_PUBLISHABLE_KEY in Frontend/.env).
+      </p>
+    );
+  }
 
   if (loadingSession) return <p style={{ fontFamily: "monospace", padding: 24 }}>Loading session…</p>;
 

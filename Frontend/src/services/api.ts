@@ -1,15 +1,23 @@
 import type { Item, Move, MoveBox, Photo, UserRoom } from "../types";
 import { getSessionUserId } from "../storage";
+import { supabase } from "../lib/supabaseClient";
 
 const BASE = "/api";
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const userId = getSessionUserId();
+  // Sends a real Supabase token whenever a session exists, alongside the
+  // legacy header - the backend prefers the verified token when both are
+  // present (see Backend/src/middleware/currentUser.ts) and falls back to
+  // the header otherwise. No real login UI exists yet, so there's never a
+  // session here today: this is a no-op until that UI is wired up.
+  const accessToken = supabase ? (await supabase.auth.getSession()).data.session?.access_token : undefined;
   const res = await fetch(`${BASE}${path}`, {
     ...options,
     headers: {
       "Content-Type": "application/json",
       ...(userId ? { "x-user-id": userId } : {}),
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
       ...options.headers,
     },
   });
