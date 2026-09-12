@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
-import { ArrowUpRight, Box, MapPin, Sparkles } from "lucide-react";
+import { ArrowUpRight, Box, LogIn, MapPin, Sparkles } from "lucide-react";
 import type { AuthView, MoveDraft, UserRoom } from "../types";
 
 function AuthFrame({ children }: { children: ReactNode }) {
@@ -20,11 +20,17 @@ export function Onboarding({
   onBegin,
   onSignUp,
   onMove,
+  onShowLogin,
+  onBackToWelcome,
+  onLogin,
 }: {
   view: AuthView;
   onBegin: () => void;
   onSignUp: (fields: { name: string; email: string; password: string }) => void;
   onMove: (move: MoveDraft) => void;
+  onShowLogin: () => void;
+  onBackToWelcome: () => void;
+  onLogin: (fields: { email: string; password: string }) => void;
 }) {
   const [error, setError] = useState("");
   const [counts, setCounts] = useState({
@@ -266,7 +272,52 @@ export function Onboarding({
           <button className="auth-submit" onClick={onBegin}>
             Get started <ArrowUpRight size={17} />
           </button>
+          <p className="auth-switch">
+            Already have an account? <button type="button" onClick={onShowLogin}>Log in</button>
+          </p>
         </div>
+      </AuthFrame>
+    );
+  if (view === "login")
+    return (
+      <AuthFrame>
+        <form
+          className="auth-card"
+          onSubmit={(event) => {
+            event.preventDefault();
+            const data = new FormData(event.currentTarget);
+            const email = String(data.get("email")).trim();
+            const password = String(data.get("password"));
+            if (!email || !password) {
+              setError("Enter your email and password.");
+              return;
+            }
+            setError("");
+            onLogin({ email, password });
+          }}
+        >
+          <span className="auth-icon">
+            <LogIn size={24} />
+          </span>
+          <p className="eyebrow">WELCOME BACK</p>
+          <h1>Log in</h1>
+          <p className="auth-subtitle">Pick up right where you left off.</p>
+          <label>
+            Email
+            <input name="email" type="email" autoFocus placeholder="you@example.com" />
+          </label>
+          <label>
+            Password
+            <input name="password" type="password" placeholder="Your password" />
+          </label>
+          {error && <p className="form-error">{error}</p>}
+          <button className="auth-submit">
+            Log in <ArrowUpRight size={17} />
+          </button>
+          <button type="button" className="auth-secondary" onClick={onBackToWelcome}>
+            Back
+          </button>
+        </form>
       </AuthFrame>
     );
   return null;

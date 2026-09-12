@@ -61,4 +61,4 @@ export type User = {
   createdAt: string;
   move?: Move;
 };
-export type AuthView = "welcome" | "name" | "move";
+export type AuthView = "welcome" | "name" | "move" | "login";

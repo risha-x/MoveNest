@@ -139,6 +139,23 @@ function App() {
   const [sessionLoading, setSessionLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
 
+  // Fetches the user for an id and puts the app in the right place for them:
+  // straight to the dashboard if onboarding is done, or resume onboarding
+  // where they left off. Shared by session bootstrap and the log-in form.
+  const loadUserSession = async (userId: string) => {
+    const fetchedUser = await api.getUser(userId);
+    if (fetchedUser.onboardingCompleted) {
+      const move = await api.getMove();
+      setCurrentUser(move ? { ...fetchedUser, move } : fetchedUser);
+    } else {
+      // They started onboarding and left before finishing — resume rather
+      // than silently create a second orphaned user on next "Get started".
+      setPendingUser(fetchedUser);
+      setCurrentUser(fetchedUser);
+      setAuthView(fetchedUser.displayName ? "move" : "name");
+    }
+  };
+
   // Prefer a real Supabase session; fall back to the legacy locally-remembered
   // id (pre-real-auth accounts) if none exists. Either way, ask the API who
   // that is - api.ts sends whichever credential is available on every call.
@@ -150,17 +167,7 @@ function App() {
         if (!storedId) {
           return;
         }
-        const fetchedUser = await api.getUser(storedId);
-        if (fetchedUser.onboardingCompleted) {
-          const move = await api.getMove();
-          setCurrentUser(move ? { ...fetchedUser, move } : fetchedUser);
-        } else {
-          // They started onboarding and left before finishing — resume rather
-          // than silently create a second orphaned user on next "Get started".
-          setPendingUser(fetchedUser);
-          setCurrentUser(fetchedUser);
-          setAuthView(fetchedUser.displayName ? "move" : "name");
-        }
+        await loadUserSession(storedId);
       } catch {
         clearSessionUserId();
       } finally {
@@ -189,6 +196,19 @@ function App() {
       setAuthView("move");
     } catch (err) {
       setAuthError(err instanceof Error ? err.message : "Couldn't create your account. Please try again.");
+    }
+  };
+  const logIn = async (fields: { email: string; password: string }) => {
+    if (!supabase) {
+      setAuthError("Log in isn't available right now - Supabase isn't configured.");
+      return;
+    }
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword(fields);
+      if (error) throw error;
+      await loadUserSession(data.user.id);
+    } catch (err) {
+      setAuthError(err instanceof Error ? err.message : "Couldn't log in. Check your email and password.");
     }
   };
   const saveMove = async (move: MoveDraft) => {
@@ -231,6 +251,9 @@ function App() {
           onBegin={beginOnboarding}
           onSignUp={signUp}
           onMove={saveMove}
+          onShowLogin={() => setAuthView("login")}
+          onBackToWelcome={() => setAuthView("welcome")}
+          onLogin={logIn}
         />
         {authError && <ErrorToast message={authError} onDismiss={() => setAuthError(null)} />}
       </>
